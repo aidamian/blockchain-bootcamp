@@ -14,6 +14,8 @@ contract Moneybox {
         ballance += msg.value;
     }
 
+    // gas efficient: receive() external payable {}
+
     function withdraw(uint amount, address payable destAddr) public {
         require(ballance >= amount, "Not enough money");
         require(msg.sender == owner, "Only owner can withdraw");
