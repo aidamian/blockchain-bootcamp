@@ -1,0 +1,16 @@
+# Compiler files - ignores cache and out folders in all Foundry project directories
+**/cache/
+**/out/
+
+# Ignores development broadcast logs except for the broadcast directory structure
+/broadcast/*
+!/broadcast
+/broadcast/*/31337/
+# Ignore all dry-run logs
+/broadcast/**/dry-run/
+
+# Documentation files
+docs/
+
+# Dotenv file
+.env

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
+
+import "forge-std/console.sol";
 
 contract Moneybox {
 
@@ -10,7 +12,10 @@ contract Moneybox {
         owner = msg.sender;
     }
 
-    receive() external payable { // 0xD197aAf1Ef2584322F191b2B72388f18718A5BC7
+    receive() external payable { // 0xD197aAf1Ef2584322F191b2B72388f18718A5BC7      
+        console.log("Contract: ", address(this));
+        console.log("Received: ", msg.value / 1 ether, "ETH");
+        console.log("From:     ", msg.sender);
         ballance += msg.value;
     }
 
