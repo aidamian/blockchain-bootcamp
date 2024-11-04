@@ -13,9 +13,8 @@ contract Moneybox {
     }
 
     receive() external payable { // 0xD197aAf1Ef2584322F191b2B72388f18718A5BC7      
-        console.log("Contract: ", address(this));
-        console.log("Received: ", msg.value / 1 ether, "ETH");
-        console.log("From:     ", msg.sender);
+        console.log("CTR RCV:", msg.value / 1 ether, "ETH");
+        console.log("CTR FRM:", msg.sender);
         ballance += msg.value;
     }
 

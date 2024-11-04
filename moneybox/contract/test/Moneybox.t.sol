@@ -6,14 +6,13 @@ import "../src/Moneybox.sol"; // Adjust the path as necessary
 
 contract MoneyboxTest is Test {
     Moneybox public moneybox;
-    address public owner;
     address public nonOwner;
     address public destAddr;
+    address public ownerAddr;
 
     function setUp() public {
-        owner = address(this);
+        ownerAddr = address(this);
         nonOwner = address(0x123);
-        destAddr = address(0x456);
 
         // now allocate ballance for the test contract
         uint256 myFunds = 10 ether;
@@ -23,6 +22,9 @@ contract MoneyboxTest is Test {
         console.log("Test balance:  ", loadedBalance / 1 ether, " ETH");
 
         moneybox = new Moneybox();
+        destAddr = address(moneybox);
+        console.log("Moneybox: ", destAddr);
+        console.log("Owner: ", ownerAddr);
     }
 
     function testInitialBalance() public view {
@@ -33,7 +35,6 @@ contract MoneyboxTest is Test {
     function testReceiveEther() public {
         // Send 1 ether to the contract
         uint256 sendAmount = 1 ether;
-        destAddr = address(moneybox);        
         console.log("Sending", sendAmount / 1 ether, "ETH to", destAddr);
 
         //payable(destAddr).transfer(sendAmount);
@@ -50,7 +51,6 @@ contract MoneyboxTest is Test {
     function testWithdrawAsOwner() public {
         uint256 depositAmount = 2 ether;
         uint256 withdrawAmount = 1 ether;
-        destAddr = address(moneybox);        
 
         // Deposit Ether into the contract        
         uint256 prevBalance = destAddr.balance;
@@ -61,13 +61,21 @@ contract MoneyboxTest is Test {
         uint256 newBalance = destAddr.balance;
         console.log("New balance: ", newBalance / 1 ether, "ETH");
         assertEq(newBalance - prevBalance, depositAmount, "Deposit amount mismatch");
+        console.log("My ballance: ", ownerAddr.balance / 1 ether, "ETH");
 
         // Withdraw Ether as the owner
-        console.log("Withdrawing", withdrawAmount / 1 ether, "ETH from", destAddr);
-        moneybox.withdraw(withdrawAmount, payable(destAddr));
+        address destination = ownerAddr;
+        console.log("Withdrawing", withdrawAmount / 1 ether, "ETH from TO", destination);
+        // moneybox.withdraw(withdrawAmount, payable(destAddr));
+        // Use `.call` to specify a custom gas limit for the withdraw function
+        (success, ) = address(moneybox).call{gas: 100000}(
+          abi.encodeWithSignature("withdraw(uint256,address)", withdrawAmount, payable(destination))
+        );
+        require(success, "Withdraw failed");
         uint256 finalBalance = destAddr.balance;
-        console.log("Final balance: ", finalBalance / 1 ether, "ETH");
+        console.log("Final balance in moneybox:", finalBalance / 1 ether, "ETH");
         assertEq(finalBalance, newBalance - withdrawAmount, "Remaining balance mismatch");
+        console.log("Final balance in owner:", ownerAddr.balance / 1 ether, "ETH");
     }
 
     function testWithdrawExceedsBalance() public {
@@ -75,19 +83,23 @@ contract MoneyboxTest is Test {
         uint256 withdrawAmount = 2 ether; // more than the deposited amount
 
         // Deposit Ether into the contract
-        payable(address(moneybox)).transfer(depositAmount);
+        // payable(address(moneybox)).transfer(depositAmount);
+        (bool success, ) = payable(destAddr).call{value: depositAmount, gas: 100000}("");
+        require(success, "Ether transfer failed"); 
         assertEq(moneybox.ballance(), depositAmount, "Deposit amount mismatch");
 
         // Attempt to withdraw more than available balance should revert
         vm.expectRevert("Not enough money");
-        moneybox.withdraw(withdrawAmount, payable(destAddr));
+        moneybox.withdraw(withdrawAmount, payable(ownerAddr));
     }
 
     function testWithdrawAsNonOwner() public {
         uint256 depositAmount = 1 ether;
 
         // Deposit Ether into the contract
-        payable(address(moneybox)).transfer(depositAmount);
+        //payable(address(moneybox)).transfer(depositAmount);
+        (bool success, ) = payable(destAddr).call{value: depositAmount, gas: 100000}("");
+        require(success, "Ether transfer failed");         
         assertEq(moneybox.ballance(), depositAmount, "Deposit amount mismatch");
 
         // Attempt withdrawal from non-owner account should revert
