@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Head content remains the same -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Withdraw and Check Balance</title>
-
     <style>
-      /* Lower font size in the log window */
-      #logWindow {
-          font-size: 12px; /* Adjust as needed */
-          /* width: 100%; */
-      }
-  </style>
-
+        /* Lower font size in the log window */
+        #logWindow {
+            font-size: 12px; /* Adjust as needed */
+        }
+    </style>
 </head>
 <body>
+    <p>Test dApp v: <span id="dappVersion">Unknown</span></p>
     <h2>Withdraw ETH from Contract</h2>
+    <!-- Network Selection Dropdown -->
+    <label for="networkSelect">Select Network:</label>
+    <select id="networkSelect">
+       <!-- Options will be dynamically populated -->
+    </select>
+    <!-- display version -->
+    <!-- Added networkDisplay element -->
+    <p>Current Network: <span id="networkDisplay">Unknown</span></p>
+    <br><br>
     <label for="contractAddress">Contract Address:</label>
     <input type="text" id="contractAddress" placeholder="0x..." />
     <button onclick="getBalance()">Get Balance</button>
