@@ -2,6 +2,7 @@
 **/cache/
 **/out/
 
+
 # Ignores development broadcast logs except for the broadcast directory structure
 /broadcast/*
 !/broadcast
