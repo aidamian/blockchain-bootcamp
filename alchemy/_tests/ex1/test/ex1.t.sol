@@ -9,6 +9,8 @@ contract ContractTest is Test {
     address public owner;
     address public nonOwner;
 
+    receive() external payable {} // we need this to receive funds from the tested contract
+
     function setUp() public {
         owner = address(this); // Test contract is the deployer
         nonOwner = address(0x123); // Simulated non-owner address
@@ -47,12 +49,26 @@ contract ContractTest is Test {
     }
 
     function testWithdrawByNonOwner() public {
+
+        uint256 initialValue = address(contractInstance).balance;
+        console.log("Pre deposit value: ", initialValue);
+
+        (bool success, ) = address(contractInstance).call{value: 1 ether}("");
+        require(success); // Fund the contract with 1 ETH
+
+        initialValue = address(contractInstance).balance;
+        console.log("Initial value: ", initialValue);
+
         // Set the next call to be made from a non-owner address
         vm.prank(nonOwner);
 
         // Expect the withdraw call to revert because the caller is not the owner
         vm.expectRevert();
         contractInstance.withdraw();
+
+        // Verify that the contract's balance remains unchanged
+        console.log("Following bandit withdraw: ", address(contractInstance).balance);
+        assertEq(address(contractInstance).balance, initialValue);
     }
 
     function testInsufficientDeploymentFunds() public {
