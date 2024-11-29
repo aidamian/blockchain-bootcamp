@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {console} from "forge-std/Test.sol";
+
 contract LicenseContract {
     struct License {
         uint256 id;
         string nodeAddress;
         uint256 lastAccessed;
+        uint256 totalClaimed;
     }
+
+    uint256 MAX_CLAIM_PER_LICENSE = 1000;
 
     uint256 public licenseCounter;    
 
@@ -15,16 +20,19 @@ contract LicenseContract {
     mapping(uint256 => address) public licenseOwner;
 
 
-    function createLicense(string memory _nodeAddress) public {
+    function buyLicense() public payable returns (uint256) {
+        require(msg.value == 1 ether, "You must pay 1 ether to buy a license");
         licenseCounter++;
         licenses[msg.sender][licenseCounter] = License(
             licenseCounter,
-            _nodeAddress,
-            block.timestamp
+            "0x0",
+            block.timestamp,
+            0
         );
         licensesByOwner[msg.sender].push(licenseCounter);
+        licenseOwner[licenseCounter] = msg.sender;
+        return licenseCounter;
     }
-
 
     function getLicenseOwner(uint256 _licenseId) public view returns (address) {
         return licenseOwner[_licenseId];
@@ -69,36 +77,40 @@ contract LicenseContract {
 
     function transferLicense(address _newOwner, uint256 _licenseId) public {
         require(hasLicense(msg.sender, _licenseId), "You do not own this license");
-        licenses[_newOwner][_licenseId] = licenses[msg.sender][_licenseId];
-        delete licenses[msg.sender][_licenseId];
+        
+        License memory license = licenses[msg.sender][_licenseId];
+
+        deleteLicense(_licenseId);
+
+        licenses[_newOwner][_licenseId] = license;
         licenseOwner[_licenseId] = _newOwner;
-        licensesByOwner[msg.sender].push(_licenseId);
+        licensesByOwner[_newOwner].push(_licenseId);
     }
 
-    function buyLicense() public payable {
-        require(msg.value == 1 ether, "You must pay 1 ether to buy a license");
-        licenseCounter++;
-        licenses[msg.sender][licenseCounter] = License(
-            licenseCounter,
-            "0x0",
-            block.timestamp
-        );
-        licensesByOwner[msg.sender].push(licenseCounter);
-    }
 
 
     function calculateRevenue(uint256 _licenseId) public view returns (uint256) {
-        require(hasLicense(msg.sender, _licenseId), "You do not own this license");
         // for each second since the last access, the owner gets 1 wei
         License memory license = licenses[msg.sender][_licenseId];
         return (block.timestamp - license.lastAccessed);
     }
 
 
-    function claimRevenue(uint256 _licenseId) public {
-        require(hasLicense(msg.sender, _licenseId), "You do not own this license");
+    function claimRevenue(uint256 _licenseId) public returns (uint256) {
+        // console.log("License: ", _licenseId, " By ", msg.sender);
+        require(hasLicense(msg.sender, _licenseId), "Claim not allowed");
         uint256 revenue = calculateRevenue(_licenseId);
+        uint256 totalClaimed = licenses[msg.sender][_licenseId].totalClaimed;
+        require(totalClaimed <= MAX_CLAIM_PER_LICENSE, "You have reached the maximum claimable amount");  
+        if (totalClaimed + revenue > MAX_CLAIM_PER_LICENSE) {
+            revenue = MAX_CLAIM_PER_LICENSE - totalClaimed;
+        }
+        require(revenue > 0, "No reward to claim");
+        require(address(this).balance >= revenue, "Not enough balance to claim revenue");
         payable(msg.sender).transfer(revenue);
+        licenses[msg.sender][_licenseId].lastAccessed = block.timestamp;
+        licenses[msg.sender][_licenseId].totalClaimed += revenue;
+        return revenue;
     }
     
 }
