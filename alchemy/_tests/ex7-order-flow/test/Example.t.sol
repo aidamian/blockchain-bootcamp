@@ -23,6 +23,8 @@ contract ExampleTest is Test {
         example.payment{value: 1 ether}(orderId);
 
         Example.Order memory order = example.getOrder(orderId);
+        // (,,,Exaple.OrderStatus status) = example.orders(orderId);
+
 
         assertEq(address(example).balance, 1 ether);
         assertEq(uint8(order.status), uint8(Example.OrderStatus.Paid));
@@ -36,18 +38,22 @@ contract ExampleTest is Test {
         assertEq(uint8(order.status), uint8(Example.OrderStatus.Delivered));       
 
         // we are acting as buyer
+        uint256 sellerBalanceBeforeFinish = seller.balance;
         hoax(buyer);
         example.received(orderId);
 
         order = example.getOrder(orderId);
+        uint256 sellerBalanceAfterFinish = seller.balance;
+        uint256 sellerGain = sellerBalanceAfterFinish - sellerBalanceBeforeFinish;
 
         console.log("Order status: %s", uint8(order.status));
         console.log("Contract balance: %s", address(example).balance);
         console.log("Seller balance: %s", seller.balance);
-        console.log("Buyer balance:  %s", buyer.balance);
+        console.log("Seller gain:  %s", sellerGain);
+
 
         assertEq(uint8(order.status), uint8(Example.OrderStatus.Received));
         assertEq(address(example).balance, 0);
-        assertEq(seller.balance, buyer.balance + 1 ether);
+        assertEq(seller.balance, sellerBalanceBeforeFinish + 1 ether);
     }
 }
