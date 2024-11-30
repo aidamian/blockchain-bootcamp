@@ -13,15 +13,34 @@ contract LicenseContract {
 
     uint256 MAX_CLAIM_PER_LICENSE = 1000;
 
-    uint256 public licenseCounter;    
+    uint LICENSE_PRICE = 1 ether;
+
+    uint256 public licenseCounter;  
+
+    address public owner;  
 
     mapping(address => mapping(uint256 => License)) public licenses;
     mapping(address => uint256[]) public licensesByOwner;
     mapping(uint256 => address) public licenseOwner;
 
 
+    constructor() {
+        owner = msg.sender;
+    }
+
+
+    function getOwner() public view returns (address) {
+        return owner;
+    }
+
+    function getLicensePrice() public view returns (uint) {
+        return LICENSE_PRICE;
+    }
+
+
     function buyLicense() public payable returns (uint256) {
-        require(msg.value == 1 ether, "You must pay 1 ether to buy a license");
+        uint256 licensePrice = getLicensePrice();
+        require(msg.value == licensePrice, "You must pay 1 ether to buy a license");
         licenseCounter++;
         licenses[msg.sender][licenseCounter] = License(
             licenseCounter,
@@ -31,6 +50,9 @@ contract LicenseContract {
         );
         licensesByOwner[msg.sender].push(licenseCounter);
         licenseOwner[licenseCounter] = msg.sender;
+        
+        uint256 ownerStake = licensePrice / 2;
+        payable(owner).transfer(ownerStake);
         return licenseCounter;
     }
 
@@ -107,6 +129,7 @@ contract LicenseContract {
         }
         require(revenue > 0, "No reward to claim");
         require(address(this).balance >= revenue, "Not enough balance to claim revenue");
+        // transfer half of the revenue to the owner
         payable(msg.sender).transfer(revenue);
         licenses[msg.sender][_licenseId].lastAccessed = block.timestamp;
         licenses[msg.sender][_licenseId].totalClaimed += revenue;
