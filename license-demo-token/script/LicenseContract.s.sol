@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {LicenseContract} from "../src/LicenseContract.sol";
+import {LicenseContract, MockERC20} from "../src/LicenseContract.sol";
 
 contract LicenseContractScript is Script {
     LicenseContract public counter;
@@ -12,7 +12,8 @@ contract LicenseContractScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        counter = new LicenseContract();
+        MockERC20 token = new MockERC20();
+        counter = new LicenseContract(address(token));
 
         vm.stopBroadcast();
     }
