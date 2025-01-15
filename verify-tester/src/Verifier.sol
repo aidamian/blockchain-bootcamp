@@ -13,7 +13,7 @@ contract SignatureVerifier {
 
     function verify(
         address signer,
-        string calldata node,
+        address node,
         uint256[] calldata epochs,
         uint256[] calldata epochs_vals,
         bytes calldata signature
@@ -31,7 +31,7 @@ contract SignatureVerifier {
     }
 
     function getMessageHash(
-        string memory node,
+        address node,
         uint256[] memory epochs,
         uint256[] memory epochs_vals
     ) public pure returns (bytes32) {
@@ -43,4 +43,7 @@ contract SignatureVerifier {
     }
 
 }
+
+
+
 

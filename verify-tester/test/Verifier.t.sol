@@ -14,7 +14,8 @@ contract SignatureVerifierTest is Test {
 
     function testVerifySignature() public view {
         // Data from your Python script
-        string memory node = "0xai_AthDPWc_k3BKJLLYTQMw--Rjhe3B6_7w76jlRpT6nDeX";
+        // string memory node = "0xai_AthDPWc_k3BKJLLYTQMw--Rjhe3B6_7w76jlRpT6nDeX";
+        address node = 0x129a21A78EBBA79aE78B8f11d5B57102950c1Fc0;
         uint256[] memory epochs = new uint256[](1);
         uint256[] memory epochs_vals = new uint256[](1);
 
